@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
 import sqlite3
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user 
-from models import db, User
+from models import db, User,Student
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'tubes'
@@ -58,16 +58,16 @@ def logout():
 def dashboard():
     return f'Hello, {current_user.username}! This is your dashboard.'
 
-@app.route('/students', methods=['GET'])
-@login_required
-class Student(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    age = db.Column(db.Integer, nullable=False)
-    grade = db.Column(db.String(10), nullable=False)
+# @app.route('/students', methods=['GET'])
+# @login_required
+# class Student(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     name = db.Column(db.String(100), nullable=False)
+#     age = db.Column(db.Integer, nullable=False)
+#     grade = db.Column(db.String(10), nullable=False)
 
-    def __repr__(self):
-        return f'<Student {self.name}>'
+#     def __repr__(self):
+#         return f'<Student {self.name}>'
 
 @app.route('/')
 def index():
@@ -104,6 +104,12 @@ def add_student():
     name = request.form['name']
     age = request.form['age']
     grade = request.form['grade']
+    # Check for existing student
+    existing_student = Student.query.filter_by(name=name, age=age, grade=grade).first()
+    if existing_student:
+        flash('This student already exists in the database.', 'warning')
+        return redirect(url_for('index'))
+
     new_student = Student(name=name, age=age, grade=grade)
     db.session.add(new_student)
     db.session.commit()
